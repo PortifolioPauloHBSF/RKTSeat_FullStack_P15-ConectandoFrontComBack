@@ -1,36 +1,56 @@
-import { useState } from "react";
+import { useActionState } from "react";
 import { Input } from "../components/Input";
 import { Button } from "../components/Button";
+import { z, ZodError } from "zod";
+import { api } from "../services/api";
+import { AxiosError } from "axios";
+
+const signInSchema = z.object({
+    email: z.string().email({ message: "Informe um email válido" }),
+    password: z.string(),
+});
 
 export function SignIn() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
+    const [state, formAction, isPending] = useActionState(signIn, {
+        email: "",
+        password: "",
+    });
 
-    function onSubmit(e: React.FormEvent) {
-        e.preventDefault();
-        setIsLoading(true)
-        console.log(email, password);
-        setIsLoading(false)
+    async function signIn(_: any, formData: FormData) {
+        try {
+            const data = signInSchema.parse({
+                email: formData.get("email"),
+                password: formData.get("password"),
+            });
+
+            const response = await api.post("/sessions", data);
+            console.log(response.data);
+        } catch (error) {
+            if (error instanceof ZodError) {
+                return { email: formData.get("email"), message: error.issues[0]?.message };
+            }
+            if (error instanceof AxiosError) {
+                return { message: error.response?.data.message };
+            }
+            return { email: formData.get("email"), message: "Não foi possível entrar" };
+        }
     }
 
     return (
-        <form onSubmit={onSubmit} className="w-full flex flex-col gap-4">
+        <form action={formAction} className="w-full flex flex-col gap-4">
             <Input
+                name="email"
                 legend="E-mail"
                 type="email"
                 placeholder="seu@email.com"
-                onChange={(e) => setEmail(e.target.value)}
+                defaultValue={String(state?.email)}
                 required
             />
-            <Input
-                legend="Senha"
-                type="password"
-                placeholder="senha"
-                onChange={(e) => setPassword(e.target.value)}
-                required
-            />
-            <Button isLoading={isLoading} type="submit">
+            <Input name="password" legend="Senha" type="password" placeholder="senha" required />
+                <p className="text-sm text-red-600 text-center my-4 font-medium">
+                    {state?.message}
+                </p>
+            <Button isLoading={isPending} type="submit">
                 Entrar
             </Button>
             <a
