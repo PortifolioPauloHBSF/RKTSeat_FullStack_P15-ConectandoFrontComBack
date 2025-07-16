@@ -32,7 +32,7 @@ export function SignIn() {
                 return { email: formData.get("email"), message: error.issues[0]?.message };
             }
             if (error instanceof AxiosError) {
-                return { message: error.response?.data.message };
+                return { email: formData.get("email"), message: error.response?.data.message };
             }
             return { email: formData.get("email"), message: "Não foi possível entrar" };
         }
