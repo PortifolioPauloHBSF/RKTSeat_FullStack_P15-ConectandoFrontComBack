@@ -5,8 +5,19 @@ import { Upload } from "../components/Upload";
 import { Button } from "../components/Button";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
+import { z, ZodError } from "zod";
+import { api } from "../services/api";
+import { AxiosError } from "axios";
 
-import fileSvg from "../assets/file.svg"
+import fileSvg from "../assets/file.svg";
+
+const refundSchema = z.object({
+    name: z.string().trim().min(3, { message: "Informe um Nome Claro para sua Solicitação" }),
+    category: z.string().min(1, { message: "Informe a Categoria" }),
+    amount: z.coerce
+        .number({ message: "Informe um valor válido" })
+        .positive({ message: "Informe um valor válido e positivo." }),
+});
 
 export function Refund() {
     const [name, setName] = useState("");
@@ -18,21 +29,41 @@ export function Refund() {
     const navigate = useNavigate();
     const param = useParams<{ id: string }>();
 
-    function onSubmit(e: React.FormEvent) {
+    async function onSubmit(e: React.FormEvent) {
         e.preventDefault();
 
         if (param.id) {
             return navigate(-1);
         }
 
-        setIsLoading(true);
-        console.log({
-            name,
-            amount,
-            category,
-            filename,
-        });
-        navigate("/confirm", { state: { fromSubmit: true } });
+        try {
+            setIsLoading(true);
+            const data = refundSchema.parse({
+                name,
+                category,
+                amount: amount.replace(",", "."),
+            });
+
+            await api.post("/refunds", {
+                ...data,
+                filename: "12345678910111213141516171819.png",
+            });
+
+            navigate("/confirm", { state: { fromSubmit: true } });
+        } catch (error) {
+            console.log(error);
+            if (error instanceof ZodError) {
+                return alert(error.issues[0].message);
+            }
+
+            if (error instanceof AxiosError) {
+                return alert(error.response?.data.message);
+            }
+
+            alert("Não foi possível realizar a solicitação.");
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     return (
@@ -82,7 +113,11 @@ export function Refund() {
             </div>
 
             {param.id ? (
-                <a href="http://google.com" target="_blank" className="text-sm text-green-100 font-semibold flex items-center justify-center gap-2 my-6 hover:opacity-80 transition ease-linear">
+                <a
+                    href="http://google.com"
+                    target="_blank"
+                    className="text-sm text-green-100 font-semibold flex items-center justify-center gap-2 my-6 hover:opacity-80 transition ease-linear"
+                >
                     <img src={fileSvg} alt="Ícone de Baixar Arquivo" />
                     Abrir comprovante
                 </a>
