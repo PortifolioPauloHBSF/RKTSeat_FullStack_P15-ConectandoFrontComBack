@@ -16,7 +16,7 @@ enum Category {
   food
   services
   transport
-  accomodation
+  accommodation
   other
 }
 
