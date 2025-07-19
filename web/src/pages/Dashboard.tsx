@@ -42,6 +42,8 @@ export function Dashboard() {
                     categoryImg: CATEGORIES[refund.category].icon
                 }))
             );
+
+            setTotalPages(response.data.refunds.pagination.totalPages)
         } catch (error) {
             console.log(error);
             if (error instanceof AxiosError) {
@@ -49,6 +51,11 @@ export function Dashboard() {
             }
             alert("Não foi possível carregar!");
         }
+    }
+
+    function onSubmit(e: React.FormEvent) {
+        e.preventDefault()
+        fetchRefunds()
     }
 
     useEffect(() => {
@@ -72,7 +79,7 @@ export function Dashboard() {
             <h1 className="text-gray-100 font-bold text-xl flex-1">Solicitações</h1>
 
             <form
-                onSubmit={fetchRefunds}
+                onSubmit={onSubmit}
                 className="flex items-center justify-between pb-6 border-b-[1px] border-b-gray-400 md:flex-row gap-2 mt-6"
             >
                 <Input
