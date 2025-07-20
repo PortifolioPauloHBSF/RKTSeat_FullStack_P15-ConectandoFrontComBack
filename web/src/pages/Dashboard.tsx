@@ -42,7 +42,7 @@ export function Dashboard() {
                     categoryImg: CATEGORIES[refund.category].icon
                 }))
             );
-
+            console.log(response)
             setTotalPages(response.data.refunds.pagination.totalPages)
         } catch (error) {
             console.log(error);

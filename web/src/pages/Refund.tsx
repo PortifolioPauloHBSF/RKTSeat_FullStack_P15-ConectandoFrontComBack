@@ -3,13 +3,14 @@ import { Input } from "../components/Input";
 import { Select } from "../components/Select";
 import { Upload } from "../components/Upload";
 import { Button } from "../components/Button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { z, ZodError } from "zod";
 import { api } from "../services/api";
 import { AxiosError } from "axios";
 
 import fileSvg from "../assets/file.svg";
+import { formatCurrency } from "../utils/formatCurrency";
 
 const refundSchema = z.object({
     name: z.string().trim().min(3, { message: "Informe um Nome Claro para sua Solicitação" }),
@@ -25,6 +26,7 @@ export function Refund() {
     const [category, setCategory] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [file, setFile] = useState<File | null>(null);
+    const [fileUrl, setFileUrl] = useState<string | null>(null);
 
     const navigate = useNavigate();
     const param = useParams<{ id: string }>();
@@ -40,13 +42,13 @@ export function Refund() {
             setIsLoading(true);
 
             if (!file) {
-                return alert("Selecione um arquivo de comprovante!")
+                return alert("Selecione um arquivo de comprovante!");
             }
 
-            const fileUploadForm = new FormData()
-            fileUploadForm.append("file", file)
+            const fileUploadForm = new FormData();
+            fileUploadForm.append("file", file);
 
-            const filenameResponse = await api.post("/uploads", fileUploadForm)
+            const filenameResponse = await api.post("/uploads", fileUploadForm);
 
             const data = refundSchema.parse({
                 name,
@@ -75,6 +77,28 @@ export function Refund() {
             setIsLoading(false);
         }
     }
+
+    async function fetchRefund(id: string) {
+        try {
+            const { data } = await api.get<RefundAPIRefundsResponse>(`/refunds/${id}`);
+            setName(data.name)
+            setCategory(data.category)
+            setAmout(formatCurrency(data.amount))
+            setFileUrl(data.filename)
+        } catch (error) {
+            console.log(error);
+            if (error instanceof AxiosError) {
+                return alert(error.response?.data.message);
+            }
+            alert("Error while retrieving data.");
+        }
+    }
+
+    useEffect(() => {
+        if (param.id) {
+            fetchRefund(param.id);
+        }
+    }, [param.id]);
 
     return (
         <form
@@ -122,9 +146,9 @@ export function Refund() {
                 />
             </div>
 
-            {param.id ? (
+            {param.id && fileUrl ? (
                 <a
-                    href="http://google.com"
+                    href={`http://localhost:3333/uploads/${fileUrl}`}
                     target="_blank"
                     className="text-sm text-green-100 font-semibold flex items-center justify-center gap-2 my-6 hover:opacity-80 transition ease-linear"
                 >
