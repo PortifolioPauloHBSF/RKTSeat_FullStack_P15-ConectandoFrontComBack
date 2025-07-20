@@ -60,7 +60,7 @@ export function Dashboard() {
 
     useEffect(() => {
         fetchRefunds();
-    }, []);
+    }, [page]);
 
     function handlePagination(action: "next" | "previous") {
         setPage((prevPage) => {
