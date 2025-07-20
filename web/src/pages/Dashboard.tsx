@@ -9,16 +9,8 @@ import { Button } from "../components/Button";
 import { RefundItem, type RefundItemProps } from "../components/RefundItem";
 import { Pagination } from "../components/Pagination";
 
-import { CATEGORIES, CATEGORIES_KEYS } from "../utils/categories";
+import { CATEGORIES } from "../utils/categories";
 import { formatCurrency } from "../utils/formatCurrency";
-
-const REFUND_EXAMPLE = {
-    id: "123",
-    username: "Usuário",
-    category: "Categoria",
-    amount: formatCurrency(123.4),
-    categoryImg: CATEGORIES.accommodation.icon,
-};
 
 const PER_PAGE = 5;
 
